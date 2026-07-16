@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Mean Grade Calculator</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #8383d2;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2, h3 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #036132;
+            border-radius: 4px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #btnCompute {
+            background-color: BROWN;
+            color: white;
+        }
+        #btnClear {
+            background-color:blue;
+            color: white;
+        }
+        #error-message {
+            color: red;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: none;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 4px;
+        }
+        #studentReport {
+            margin-top: 30px;
+            padding: 15px;
+            background: #4397eb;
+            border-left: 5px solid #007bff;
+            border-radius: 4px;
+            display: none;
+        }
+        .report-item {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Student Mean Grade</h2>
+    
+    <div id="error-message"></div>
+
+    <form id="gradeForm">
+        <div class="form-group">
+            <label for="admNo">Admission NO:</label>
+            <input type="text" id="admNo">
+            </div>
+
+        <div class="form-group">
+            <label for="studentName">Student Name:</label>
+            <input type="text" id="studentName">
+            </div>
+
+        <div class="form-group">
+            <label for="maths">Mathematics:</label>
+            <input type="text" id="maths" placeholder="0 - 100">
+           </div>
+
+        <div class="form-group">
+            <label for="biology">Biology:</label>
+            <input type="text" id="biology" placeholder="0 - 100">
+            </div>
+
+        <div class="form-group">
+            <label for="chemistry">Chemistry:</label>
+            <input type="text" id="chemistry" placeholder="0 - 100">
+             </div>
+
+        <div class="form-group">
+            <label for="physics">Physics:</label>
+            <input type="text" id="physics" placeholder="0 - 100">
+            </div>
+
+        <div class="btn-group">
+            <button type="button" id="btnCompute">Compute Results</button>
+            <button type="button" id="btnClear">Clear Form</button>
+            </div>
+
+    </form>
+
+    <div id="studentReport">
+        <h3>Student Report</h3>
+        <hr>
+        <div class="report-item"><strong>Admission Number:</strong> <span id="repAdm"></span></div>
+        <div class="report-item"><strong>Name:</strong> <span id="repName"></span></div>
+        <div class="report-item"><strong>Mathematics:</strong> <span id="repMaths"></span></div>
+        <div class="report-item"><strong>Biology:</strong> <span id="repBio"></span></div>
+        <div class="report-item"><strong>Chemistry:</strong> <span id="repChem"></span></div>
+        <div class="report-item"><strong>Physics:</strong> <span id="repPhys"></span></div>
+        <hr>
+        <div class="report-item"><strong>Total Marks:</strong> <span id="repTotal"></span></div>
+        <div class="report-item"><strong>Average Mark:</strong> <span id="repAverage"></span></div>
+        <div class="report-item"><strong>Mean Grade:</strong> <span id="repGrade" style="font-weight: bold; color: #007bff;"></span></div>
+         </div>
+    </div>
+
+<script>
+$(document).ready(function() {
+
+    // Event listener for Compute button
+    $('#btnCompute').click(function() {
+        // Hide previous errors and reports
+        $('#error-message').hide().text('');
+        $('#studentReport').hide();
+
+        if (validateInputs()) {
+            // Read values
+            let admNo = $('#admNo').val().trim();
+            let name = $('#studentName').val().trim();
+            let m = parseFloat($('#maths').val());
+            let b = parseFloat($('#biology').val());
+            let c = parseFloat($('#chemistry').val());
+            let p = parseFloat($('#physics').val());
+
+            // 5. Calculate sum and average
+            let results = calculateStats(m, b, c, p);
+
+            // 6. Determine Grade
+            let grade = determineGrade(results.average);
+
+            // 7. Display Report
+            displayReport(admNo, name, m, b, c, p, results.sum, results.average, grade);
+        }
+    });
+
+    // 2. Clear Form Functionality
+    $('#btnClear').click(function() {
+        $('#gradeForm')[0].reset();
+        $('#error-message').hide().text('');
+        $('#studentReport').hide();
+    });
+
+    // 4. Function to validate inputs using jQuery .val()
+    function validateInputs() {
+        let admNo = $('#admNo').val().trim();
+        let name = $('#studentName').val().trim();
+        let subjects = {
+            'Mathematics': $('#maths').val().trim(),
+            'Biology': $('#biology').val().trim(),
+            'Chemistry': $('#chemistry').val().trim(),
+            'Physics': $('#physics').val().trim()
+        };
+
+        // Validate Admission Number (Not null and numeric)
+        if (admNo === "" || isNaN(admNo)) {
+            showError("Error: Admission Number must be numeric and cannot be empty.");
+            return false;
+        }
+
+        // Validate Name (Not null)
+        if (name === "") {
+            showError("Error: Student Name cannot be empty.");
+            return false;
+        }
+
+        // Validate Subject Marks (Numeric, not null, between 0 and 100)
+        for (let subName in subjects) {
+            let markStr = subjects[subName];
+            if (markStr === "") {
+                showError(`Error: ${subName} mark cannot be empty.`);
+                return false;
+            }
+            let mark = Number(markStr);
+            if (isNaN(mark) || mark < 0 || mark > 100) {
+                showError(`Error: ${subName} mark must be a valid number between 0 and 100.`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Helper function to show jQuery error messages
+    function showError(msg) {
+        $('#error-message').text(msg).fadeIn();
+    }
+
+    // 5. Function to calculate sum and average
+    function calculateStats(m, b, c, p) {
+        let sum = m + b + c + p;
+        let average = sum / 4;
+        return { sum: sum, average: average };
+    }
+
+    // 6. Function to determine grade using the provided grading system
+    function determineGrade(avg) {
+        if (avg >= 80 && avg <= 100) return 'A';
+        if (avg >= 70 && avg < 80) return 'B';
+        if (avg >= 60 && avg < 70) return 'C';
+        if (avg >= 40 && avg < 60) return 'D';
+        return 'E'; // covers 0 - 39
+    }
+
+    // 7. Function to display everything in the report section
+    function displayReport(adm, name, m, b, c, p, total, avg, grade) {
+        $('#repAdm').text(adm);
+        $('#repName').text(name);
+        $('#repMaths').text(m);
+        $('#repBio').text(b);
+        $('#repChem').text(c);
+        $('#repPhys').text(p);
+        $('#repTotal').text(total);
+        $('#repAverage').text(avg.toFixed(2));
+        $('#repGrade').text(grade);
+
+        // Slide/Fade down the report element
+        $('#studentReport').fadeIn();
+    }
+});
+</script>
+
+</body>
+</html>
